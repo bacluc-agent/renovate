@@ -127,6 +127,7 @@ describe('workers/repository/update/branch/index', () => {
       prWorker.ensurePr = vi.fn();
       prWorker.getPlatformPrOptions = vi.fn();
       prAutomerge.checkAutoMerge = vi.fn();
+      checkExisting.isUpdatePresentOnBaseBranch.mockResolvedValue(true);
       // TODO: incompatible types (#22198)
       config = {
         ...getConfig(),
@@ -432,6 +433,73 @@ describe('workers/repository/update/branch/index', () => {
         result: 'automerged',
       });
       expect(prAutomerge.checkAutoMerge).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps automerge when a matching PR was merged previously but its update was reverted from the base branch', async () => {
+      getUpdated.getUpdatedPackageFiles.mockResolvedValueOnce({
+        ...updatedPackageFiles,
+      });
+      npmPostExtract.getAdditionalFiles.mockResolvedValueOnce({
+        artifactErrors: [],
+        updatedArtifacts: [],
+      });
+      checkExisting.prAlreadyExisted.mockResolvedValueOnce(
+        partial<Pr>({
+          number: 13,
+          state: 'merged',
+        }),
+      );
+      checkExisting.isUpdatePresentOnBaseBranch.mockResolvedValueOnce(false);
+      prAutomerge.checkAutoMerge.mockResolvedValueOnce({ automerged: true });
+      config.automerge = true;
+      config.automergeType = 'pr';
+      config.ignoreTests = true;
+
+      await expect(branchWorker.processBranch(config)).resolves.toEqual({
+        branchExists: false,
+        commitSha,
+        result: 'automerged',
+      });
+      expect(prAutomerge.checkAutoMerge).toHaveBeenCalledTimes(1);
+      expect(logger.debug).not.toHaveBeenCalledWith(
+        'Disabling automerge because PR was merged previously',
+      );
+    });
+
+    it('disables automerge for a lockfile update that is still on the base branch', async () => {
+      getUpdated.getUpdatedPackageFiles.mockResolvedValueOnce({
+        ...updatedPackageFiles,
+      });
+      npmPostExtract.getAdditionalFiles.mockResolvedValueOnce({
+        artifactErrors: [],
+        updatedArtifacts: [],
+      });
+      checkExisting.prAlreadyExisted.mockResolvedValueOnce(
+        partial<Pr>({
+          number: 13,
+          state: 'merged',
+        }),
+      );
+      checkExisting.isUpdatePresentOnBaseBranch.mockResolvedValueOnce(true);
+      config.automerge = true;
+      config.automergeType = 'pr';
+      config.ignoreTests = true;
+      config.upgrades = partial<BranchUpgradeConfig>([
+        {
+          packageFile: 'package.json',
+          lockFile: 'pnpm-lock.yaml',
+          newValue: '2.1.3',
+          isLockfileUpdate: true,
+        },
+      ]);
+
+      const res = await branchWorker.processBranch(config);
+
+      expect(res.result).not.toBe('automerged');
+      expect(prAutomerge.checkAutoMerge).toHaveBeenCalledTimes(0);
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Disabling automerge because PR was merged previously',
+      );
     });
 
     it('skips branch if closed minor PR found', async () => {
