@@ -273,7 +273,7 @@ If you don't select any status check, and you use platform automerge, then GitHu
 
 ## `automergeAfterPreviousMerge`
 
-By default, Renovate disables automerge when it finds a matching PR that was merged previously, and marks the new PR as `Disabled because a matching PR was automerged previously.`
+By default, when automerge is enabled, Renovate disables it if it finds a matching PR that was merged previously, and marks the new PR as `Disabled because a matching PR was automerged previously.`
 Renovate decides this from the state of the old PR alone: it does not check whether the update is still present on your base branch.
 An update that was merged and then reverted on your base branch therefore counts as merged previously too, and the re-raised PR stays unmerged until someone merges it by hand.
 
