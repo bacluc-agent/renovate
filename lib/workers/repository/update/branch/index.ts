@@ -199,7 +199,7 @@ export async function processBranch(
         : undefined;
     if (existingPr?.state === 'merged') {
       logger.debug(`Matching PR #${existingPr.number} was merged previously`);
-      if (config.automerge) {
+      if (config.automerge && !config.automergeAfterPreviousMerge) {
         logger.debug('Disabling automerge because PR was merged previously');
         config.automerge = false;
         config.automergedPreviously = true;

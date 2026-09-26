@@ -271,6 +271,35 @@ You must select at least one status check in the _Require status checks to pass 
 
 If you don't select any status check, and you use platform automerge, then GitHub might automerge PRs with failing tests!
 
+## `automergeAfterPreviousMerge`
+
+By default, Renovate disables automerge when it finds a matching PR that was merged previously, and marks the new PR as `Disabled because a matching PR was automerged previously.`
+Renovate decides this from the state of the old PR alone: it does not check whether the update is still present on your base branch.
+An update that was merged and then reverted on your base branch therefore counts as merged previously too, and the re-raised PR stays unmerged until someone merges it by hand.
+
+Set this option to `true` to keep automerge enabled in that situation:
+
+```json
+{
+  "packageRules": [
+    {
+      "matchPackageNames": ["ms"],
+      "automerge": true,
+      "automergeAfterPreviousMerge": true
+    }
+  ]
+}
+```
+
+!!! warning
+  This option removes the only guard that stops Renovate from automerging the same update repeatedly.
+  If the update is reverted again after Renovate automerges it, Renovate re-raises the PR on its next run and automerges it again, and again.
+  Renovate has no attempt counter, no cooldown and no per-dependency breaker, and [`automergeSchedule`](#automergeschedule) limits when Renovate may automerge, not how often one update may be automerged.
+  Only the interval at which Renovate runs on your repository bounds the loop, so enable this option only if you can fix the cause of the reverts.
+
+!!! note
+  While automerge stays enabled, Renovate also rebases the existing branch when it is behind your base branch, instead of leaving it untouched for you to deal with.
+
 ## `automergeComment`
 
 Use this only if you configure `automergeType="pr-comment"`.
