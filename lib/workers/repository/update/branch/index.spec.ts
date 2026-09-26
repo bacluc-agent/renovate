@@ -399,6 +399,7 @@ describe('workers/repository/update/branch/index', () => {
       config.ignoreTests = true;
 
       const res = await branchWorker.processBranch(config);
+
       expect(res.result).not.toBe('automerged');
       expect(prAutomerge.checkAutoMerge).toHaveBeenCalledTimes(0);
       expect(logger.debug).toHaveBeenCalledWith(
@@ -431,7 +432,11 @@ describe('workers/repository/update/branch/index', () => {
         commitSha,
         result: 'automerged',
       });
+
       expect(prAutomerge.checkAutoMerge).toHaveBeenCalledTimes(1);
+      expect(logger.debug).not.toHaveBeenCalledWith(
+        'Disabling automerge because PR was merged previously',
+      );
     });
 
     it('skips branch if closed minor PR found', async () => {
