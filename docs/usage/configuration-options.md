@@ -298,7 +298,7 @@ Set this option to `true` to keep automerge enabled in that situation:
   Only the interval at which Renovate runs on your repository bounds the loop, so enable this option only if you can fix the cause of the reverts.
 
 !!! note
-  With the default `rebaseWhen=auto`, keeping automerge enabled also makes Renovate rebase an existing branch that is behind your base branch, not only when it conflicts.
+  With the default `rebaseWhen=auto`, keeping automerge enabled also makes Renovate rebase an existing branch that is behind your base branch, not only when it conflicts, unless the base branch has a merge queue.
 
 ## `automergeComment`
 
