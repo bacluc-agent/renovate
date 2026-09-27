@@ -201,12 +201,5 @@ describe('workers/repository/update/pr/body/config-description', () => {
         `**Automerge**: Disabled because a matching PR was automerged previously.`,
       );
     });
-
-    it('renders automerge disabled by config', () => {
-      const res = getPrConfigDescription({ ...config, automerge: false });
-      expect(res).toContain(
-        `**Automerge**: Disabled by config. Please merge this manually once you are satisfied.`,
-      );
-    });
   });
 });

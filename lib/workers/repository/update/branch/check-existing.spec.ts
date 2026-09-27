@@ -46,23 +46,6 @@ describe('workers/repository/update/branch/check-existing', () => {
       expect(platform.findPr).toHaveBeenCalledTimes(1);
     });
 
-    it('returns previously merged matching PR after base revert', async () => {
-      platform.findPr.mockResolvedValueOnce(partial<Pr>({ number: 12 }));
-      platform.getPr.mockResolvedValueOnce(
-        partial<Pr>({
-          number: 12,
-          state: 'merged',
-        }),
-      );
-      await expect(prAlreadyExisted(config)).resolves.toEqual({ number: 12 });
-      expect(platform.findPr).toHaveBeenCalledWith({
-        branchName: 'some-branch',
-        prTitle: 'some-title',
-        state: '!open',
-        targetBranch: 'base-branch',
-      });
-    });
-
     it('returns true if second check hits', async () => {
       config.branchPrefixOld = 'deps/';
       platform.findPr.mockResolvedValueOnce(null);

@@ -400,7 +400,14 @@ describe('workers/repository/update/branch/index', () => {
       config.ignoreTests = true;
 
       const res = await branchWorker.processBranch(config);
-      expect(res.result).not.toBe('automerged');
+
+      expect(res).toEqual({
+        branchExists: true,
+        updatesVerified: true,
+        prNo: 5,
+        result: 'pr-created',
+        commitSha,
+      });
       expect(prAutomerge.checkAutoMerge).toHaveBeenCalledTimes(0);
       expect(logger.debug).toHaveBeenCalledWith(
         'Disabling automerge because PR was merged previously',
@@ -432,7 +439,20 @@ describe('workers/repository/update/branch/index', () => {
         commitSha,
         result: 'automerged',
       });
+
       expect(prAutomerge.checkAutoMerge).toHaveBeenCalledTimes(1);
+      expect(prAutomerge.checkAutoMerge).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          automerge: true,
+        }),
+      );
+      expect(
+        prAutomerge.checkAutoMerge.mock.calls[0][1].automergedPreviously,
+      ).toBeUndefined();
+      expect(logger.debug).not.toHaveBeenCalledWith(
+        'Disabling automerge because PR was merged previously',
+      );
     });
 
     it('keeps automerge when a matching PR was merged previously but its update was reverted from the base branch', async () => {
