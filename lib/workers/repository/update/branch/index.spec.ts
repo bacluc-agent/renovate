@@ -440,6 +440,13 @@ describe('workers/repository/update/branch/index', () => {
       });
 
       expect(prAutomerge.checkAutoMerge).toHaveBeenCalledTimes(1);
+      expect(prAutomerge.checkAutoMerge).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          automerge: true,
+          automergedPreviously: undefined,
+        }),
+      );
       expect(logger.debug).not.toHaveBeenCalledWith(
         'Disabling automerge because PR was merged previously',
       );
