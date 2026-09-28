@@ -300,7 +300,7 @@ Set this option to `true` to keep automerge enabled in that situation:
   Only the interval at which Renovate runs on your repository bounds the loop, so enable this option only if you can fix the cause of the reverts.
 
 !!! note
-  With the default `rebaseWhen=auto`, keeping automerge enabled also makes Renovate rebase an existing branch that is behind your base branch, not only when it conflicts.
+  For the updates where Renovate looks for a previously merged PR at all, with the default `rebaseWhen=auto`, keeping automerge enabled also makes Renovate rebase an existing branch that is behind your base branch, not only when it conflicts.
   Renovate checks the [`keepUpdatedLabel`](#keepupdatedlabel) first and a merge queue on the base branch second, so a labeled branch is still always kept up to date, and a queued base branch is still only rebased when it conflicts.
 
 ## `automergeComment`
