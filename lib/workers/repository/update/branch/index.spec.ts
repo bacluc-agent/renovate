@@ -400,7 +400,13 @@ describe('workers/repository/update/branch/index', () => {
 
       const res = await branchWorker.processBranch(config);
 
-      expect(res.result).not.toBe('automerged');
+      expect(res).toEqual({
+        branchExists: true,
+        updatesVerified: true,
+        prNo: 5,
+        result: 'pr-created',
+        commitSha,
+      });
       expect(prAutomerge.checkAutoMerge).toHaveBeenCalledTimes(0);
       expect(logger.debug).toHaveBeenCalledWith(
         'Disabling automerge because PR was merged previously',
