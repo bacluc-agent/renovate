@@ -292,13 +292,15 @@ Set this option to `true` to keep automerge enabled in that situation:
 ```
 
 !!! warning
-  This option removes the only guard that stops Renovate from automerging the same update repeatedly.
+  This option removes the guard that stops Renovate from automerging the same update repeatedly, for the updates where Renovate looks for a previously merged PR at all.
+  Renovate skips that lookup when it would recreate a closed PR anyway, which under the default `recreateWhen=auto` is the case for grouped, lock file maintenance, multi-version and digest updates, so this option changes nothing for them.
   If the update is reverted again after Renovate automerges it, Renovate re-raises the PR on its next run and automerges it again, and again.
   Renovate has no attempt counter, no cooldown and no per-dependency breaker, and [`automergeSchedule`](#automergeschedule) limits when Renovate may automerge, not how often one update may be automerged.
   Only the interval at which Renovate runs on your repository bounds the loop, so enable this option only if you can fix the cause of the reverts.
 
 !!! note
-  With the default `rebaseWhen=auto`, keeping automerge enabled also makes Renovate rebase an existing branch that is behind your base branch, not only when it conflicts, unless the base branch has a merge queue.
+  With the default `rebaseWhen=auto`, keeping automerge enabled also makes Renovate rebase an existing branch that is behind your base branch, not only when it conflicts.
+  Renovate checks the [`keepUpdatedLabel`](#keepupdatedlabel) first and a merge queue on the base branch second, so a labeled branch is still always kept up to date, and a queued base branch is still only rebased when it conflicts.
 
 ## `automergeComment`
 
