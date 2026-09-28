@@ -444,9 +444,11 @@ describe('workers/repository/update/branch/index', () => {
         expect.anything(),
         expect.objectContaining({
           automerge: true,
-          automergedPreviously: undefined,
         }),
       );
+      expect(
+        prAutomerge.checkAutoMerge.mock.calls[0][1].automergedPreviously,
+      ).toBeUndefined();
       expect(logger.debug).not.toHaveBeenCalledWith(
         'Disabling automerge because PR was merged previously',
       );
