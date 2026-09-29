@@ -302,6 +302,7 @@ Set this option to `true` to keep automerge enabled in that situation:
 !!! note
   For the updates where Renovate looks for a previously merged PR at all, with the default `rebaseWhen=auto`, keeping automerge enabled also makes Renovate rebase an existing branch that is behind your base branch, not only when it conflicts.
   Renovate checks the [`keepUpdatedLabel`](#keepupdatedlabel) first and a merge queue on the base branch second, so a labeled branch is still always kept up to date, and a queued base branch is still only rebased when it conflicts.
+  With [`automergeType="branch"`](#automergetype) the branch needs no PR, so this option also keeps such an update automergeable on runs outside your [`schedule`](#schedule) window, where the default skips the run as `not-scheduled`; that automerge is limited by [`automergeSchedule`](#automergeschedule).
 
 ## `automergeComment`
 
