@@ -408,6 +408,9 @@ describe('workers/repository/update/branch/index', () => {
         commitSha,
       });
       expect(prAutomerge.checkAutoMerge).toHaveBeenCalledTimes(0);
+      expect(prWorker.ensurePr.mock.calls[0][0].automergedPreviously).toBe(
+        true,
+      );
       expect(logger.debug).toHaveBeenCalledWith(
         'Disabling automerge because PR was merged previously',
       );
