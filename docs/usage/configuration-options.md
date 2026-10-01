@@ -273,11 +273,11 @@ If you don't select any status check, and you use platform automerge, then GitHu
 
 ## `automergeAfterPreviousMerge`
 
-By default, when automerge is enabled, Renovate disables it if it finds a matching PR that was merged previously, and marks the new PR as `Disabled because a matching PR was automerged previously.`
-Renovate decides this from the state of the old PR alone: it does not check whether the update is still present on your base branch.
-An update that was merged and then reverted on your base branch therefore counts as merged previously too, and the re-raised PR stays unmerged until someone merges it by hand.
+By default, Renovate disables automerge when it finds a matching PR that was merged previously, but only as long as that update is still present on your base branch.
+Renovate marks the new PR as `Disabled because a matching PR was automerged previously.` when it finds such an update on your base branch, and decides that from the state of the old PR alone.
+If the merged update was later reverted on your base branch, Renovate still needs to re-raise it, so it leaves automerge enabled.
 
-Set this option to `true` to keep automerge enabled in that situation:
+Set this option to `true` to skip that check entirely, so automerge stays enabled even when the merged update is still present on your base branch:
 
 ```json
 {
@@ -295,7 +295,7 @@ Set this option to `true` to keep automerge enabled in that situation:
   This option removes the guard that stops Renovate from automerging the same update repeatedly, for the updates where Renovate looks for a previously merged PR at all.
   Renovate skips that lookup when it would recreate a closed PR anyway, which under the default `recreateWhen=auto` is the case for lock file maintenance, for a single-update group with [`groupSingleUpdates=true`](#groupsingleupdates), for a group whose updates disagree on the target version and on the new value, and for grouped digest updates whose new values differ, so this option changes nothing for those.
   Every other update with automerge enabled still gets that lookup, and for those this option does change the behavior, most importantly a single update and a group whose updates target the same version but different values.
-  If the update is reverted again after Renovate automerges it, Renovate re-raises the PR on its next run and automerges it again, and again.
+  Without this option an update whose merged change was reverted on your base branch is automerged again anyway; with this option the same happens for an update that is still present on your base branch.
   Renovate has no attempt counter, no cooldown and no per-dependency breaker, and [`automergeSchedule`](#automergeschedule) limits when Renovate may automerge, not how often one update may be automerged.
   Only the interval at which Renovate runs on your repository bounds the loop, so enable this option only if you can fix the cause of the reverts.
 
