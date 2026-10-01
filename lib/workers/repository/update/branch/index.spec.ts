@@ -380,19 +380,81 @@ describe('workers/repository/update/branch/index', () => {
       expect(scm.deleteBranch).toHaveBeenCalledTimes(1);
     });
 
-    it('allows branch but disables automerge if merged PR found', async () => {
-      schedule.isScheduledNow.mockReturnValueOnce(false);
-      scm.branchExists.mockResolvedValue(true);
-      config.automerge = true;
-      config.updateType = 'digest';
+    it('disables automerge when a matching PR was merged previously', async () => {
+      getUpdated.getUpdatedPackageFiles.mockResolvedValueOnce({
+        ...updatedPackageFiles,
+      });
+      npmPostExtract.getAdditionalFiles.mockResolvedValueOnce({
+        artifactErrors: [],
+        updatedArtifacts: [],
+      });
       checkExisting.prAlreadyExisted.mockResolvedValueOnce(
         partial<Pr>({
           number: 13,
           state: 'merged',
         }),
       );
-      await branchWorker.processBranch(config);
-      expect(reuse.shouldReuseExistingBranch).toHaveBeenCalledTimes(0);
+      config.automerge = true;
+      config.automergeType = 'pr';
+      config.ignoreTests = true;
+
+      const res = await branchWorker.processBranch(config);
+
+      expect(res).toEqual({
+        branchExists: true,
+        updatesVerified: true,
+        prNo: 5,
+        result: 'pr-created',
+        commitSha,
+      });
+      expect(prAutomerge.checkAutoMerge).toHaveBeenCalledTimes(0);
+      expect(prWorker.ensurePr.mock.calls[0][0].automergedPreviously).toBe(
+        true,
+      );
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Disabling automerge because PR was merged previously',
+      );
+    });
+
+    it('keeps automerge when a matching PR was merged previously and automergeAfterPreviousMerge is enabled', async () => {
+      getUpdated.getUpdatedPackageFiles.mockResolvedValueOnce({
+        ...updatedPackageFiles,
+      });
+      npmPostExtract.getAdditionalFiles.mockResolvedValueOnce({
+        artifactErrors: [],
+        updatedArtifacts: [],
+      });
+      checkExisting.prAlreadyExisted.mockResolvedValueOnce(
+        partial<Pr>({
+          number: 13,
+          state: 'merged',
+        }),
+      );
+      prAutomerge.checkAutoMerge.mockResolvedValueOnce({ automerged: true });
+      config.automerge = true;
+      config.automergeAfterPreviousMerge = true;
+      config.automergeType = 'pr';
+      config.ignoreTests = true;
+
+      await expect(branchWorker.processBranch(config)).resolves.toEqual({
+        branchExists: false,
+        commitSha,
+        result: 'automerged',
+      });
+
+      expect(prAutomerge.checkAutoMerge).toHaveBeenCalledTimes(1);
+      expect(prAutomerge.checkAutoMerge).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          automerge: true,
+        }),
+      );
+      expect(
+        prAutomerge.checkAutoMerge.mock.calls[0][1].automergedPreviously,
+      ).toBeUndefined();
+      expect(logger.debug).not.toHaveBeenCalledWith(
+        'Disabling automerge because PR was merged previously',
+      );
     });
 
     it('skips branch if closed minor PR found', async () => {
