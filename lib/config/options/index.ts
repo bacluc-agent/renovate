@@ -2416,6 +2416,13 @@ const options: Readonly<RenovateOptions>[] = [
     default: false,
   },
   {
+    name: 'automergeAfterPreviousMerge',
+    description:
+      'Set to `true` to keep automerge enabled when a matching PR was merged previously.',
+    type: 'boolean',
+    default: false,
+  },
+  {
     name: 'transformTemplates',
     description: 'List of jsonata transformation rules.',
     type: 'array',

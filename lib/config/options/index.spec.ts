@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { isNullOrUndefined } from '@sindresorhus/is';
 import * as manager from '../../modules/manager/index.ts';
 import * as platform from '../../modules/platform/index.ts';
+import { getConfig } from '../defaults.ts';
 import { migrateConfig } from '../migration.ts';
 import { getOptions } from './index.ts';
 
@@ -67,6 +68,10 @@ describe('config/options/index', () => {
     const optsNames = getOptions().map((option) => option.name);
     const optsNameSet = new Set(optsNames);
     expect(optsNames).toHaveLength(optsNameSet.size);
+  });
+
+  it('disables automergeAfterPreviousMerge by default', () => {
+    expect(getConfig().automergeAfterPreviousMerge).toBe(false);
   });
 
   describe('every option with allowedValues and a default must have the default in allowedValues', () => {
