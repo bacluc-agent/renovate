@@ -88,7 +88,6 @@ describe('workers/repository/update/branch/check-existing', () => {
         upgrades: [],
         branchName: 'some-branch',
         prTitle: 'some-title',
-        branchCommits: { 'base-branch': baseCommit },
       } satisfies BranchConfig;
       git.getBranchCommit.mockReturnValue(baseCommit);
       git.getBranchFilesFromCommit.mockResolvedValue(['package.json']);
