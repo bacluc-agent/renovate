@@ -127,7 +127,7 @@ describe('workers/repository/update/branch/index', () => {
       prWorker.ensurePr = vi.fn();
       prWorker.getPlatformPrOptions = vi.fn();
       prAutomerge.checkAutoMerge = vi.fn();
-      checkExisting.isUpdatePresentOnBaseBranch.mockResolvedValue(true);
+      checkExisting.mergedUpdateStillPresent.mockResolvedValue(true);
       // TODO: incompatible types (#22198)
       config = {
         ...getConfig(),
@@ -395,6 +395,7 @@ describe('workers/repository/update/branch/index', () => {
           state: 'merged',
         }),
       );
+      checkExisting.mergedUpdateStillPresent.mockResolvedValueOnce(true);
       config.automerge = true;
       config.automergeType = 'pr';
       config.ignoreTests = true;
@@ -409,6 +410,10 @@ describe('workers/repository/update/branch/index', () => {
         commitSha,
       });
       expect(prAutomerge.checkAutoMerge).toHaveBeenCalledTimes(0);
+      expect(checkExisting.mergedUpdateStillPresent).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ number: 13, state: 'merged' }),
+      );
       expect(logger.debug).toHaveBeenCalledWith(
         'Disabling automerge because PR was merged previously',
       );
@@ -469,7 +474,7 @@ describe('workers/repository/update/branch/index', () => {
           state: 'merged',
         }),
       );
-      checkExisting.isUpdatePresentOnBaseBranch.mockResolvedValueOnce(false);
+      checkExisting.mergedUpdateStillPresent.mockResolvedValueOnce(false);
       prAutomerge.checkAutoMerge.mockResolvedValueOnce({ automerged: true });
       config.automerge = true;
       config.automergeType = 'pr';
@@ -500,7 +505,7 @@ describe('workers/repository/update/branch/index', () => {
           state: 'merged',
         }),
       );
-      checkExisting.isUpdatePresentOnBaseBranch.mockResolvedValueOnce(true);
+      checkExisting.mergedUpdateStillPresent.mockResolvedValueOnce(true);
       config.automerge = true;
       config.automergeType = 'pr';
       config.ignoreTests = true;

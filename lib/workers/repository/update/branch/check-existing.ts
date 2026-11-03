@@ -3,8 +3,11 @@ import { REPOSITORY_CHANGED } from '../../../../constants/error-messages.ts';
 import { logger } from '../../../../logger/index.ts';
 import type { Pr } from '../../../../modules/platform/index.ts';
 import { platform } from '../../../../modules/platform/index.ts';
-import { coerceArray } from '../../../../util/array.ts';
-import { getFile } from '../../../../util/git/index.ts';
+import {
+  diffCommitTree,
+  getBranchCommit,
+  getBranchFilesFromCommit,
+} from '../../../../util/git/index.ts';
 import type { BranchConfig } from '../../../types.ts';
 
 export async function prAlreadyExisted(
@@ -55,45 +58,50 @@ export async function prAlreadyExisted(
   return null;
 }
 
-/**
- * Detect whether a previously merged update is still present on the base branch.
- *
- * `prAlreadyExisted()` matches on `state: '!open'`, so a merged PR counts even when
- * its update was reverted afterwards. Reading the base branch tells the two apart.
- * Every file the update touches must still be readable and still contain one of the
- * update's target strings.
- */
-// ponytail: substring match, so a short range like "2.1" can match "2.1.3". Replace with
-// the manager's updateArtifacts output if this heuristic ever misfires.
-export async function isUpdatePresentOnBaseBranch(
+export async function mergedUpdateStillPresent(
   config: BranchConfig,
+  pr: Pr,
 ): Promise<boolean> {
-  const filePaths = new Set<string>();
-  const targets = new Set<string>();
+  try {
+    const prCommit = pr.sha ?? getBranchCommit(pr.sourceBranch);
+    if (!prCommit) {
+      logger.debug(
+        `Unable to check whether merged PR #${pr.number} is still present in ${config.baseBranch} - assuming it is`,
+      );
+      return true;
+    }
 
-  for (const upgrade of config.upgrades) {
-    for (const filePath of [
-      upgrade.packageFile,
-      upgrade.lockFile,
-      ...coerceArray(upgrade.lockFiles),
-    ]) {
-      if (filePath) {
-        filePaths.add(filePath);
-      }
+    const files = await getBranchFilesFromCommit(prCommit);
+    if (!files?.length) {
+      logger.debug(
+        `Unable to check whether merged PR #${pr.number} is still present in ${config.baseBranch} - assuming it is`,
+      );
+      return true;
     }
-    for (const target of [upgrade.newValue, upgrade.newDigest]) {
-      if (target) {
-        targets.add(target);
-      }
+
+    const baseCommit = getBranchCommit(config.baseBranch);
+    if (!baseCommit) {
+      logger.debug(
+        `Unable to check whether merged PR #${pr.number} is still present in ${config.baseBranch} - assuming it is`,
+      );
+      return true;
     }
+
+    const drift = await diffCommitTree(baseCommit, prCommit);
+    const stillPresent = !files.some((file) =>
+      drift.some((change) => change.path === file),
+    );
+    if (!stillPresent) {
+      logger.debug(
+        `Matching PR #${pr.number} was merged previously, but its changes are no longer in ${config.baseBranch} - treating it as a new update`,
+      );
+    }
+    return stillPresent;
+  } catch (err) {
+    logger.debug(
+      { prNumber: pr.number, err },
+      `Unable to check whether merged PR #${pr.number} is still present in ${config.baseBranch} - assuming it is`,
+    );
+    return true;
   }
-
-  for (const filePath of filePaths) {
-    const content = await getFile(filePath, config.baseBranch);
-    if (!content || ![...targets].some((target) => content.includes(target))) {
-      return false;
-    }
-  }
-
-  return filePaths.size > 0;
 }

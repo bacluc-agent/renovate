@@ -54,7 +54,7 @@ import { setArtifactErrorStatus } from './artifacts.ts';
 import { tryBranchAutomerge } from './automerge.ts';
 import { bumpVersions } from './bump-versions.ts';
 import {
-  isUpdatePresentOnBaseBranch,
+  mergedUpdateStillPresent,
   prAlreadyExisted,
 } from './check-existing.ts';
 import { commitFilesToBranch } from './commit.ts';
@@ -205,7 +205,7 @@ export async function processBranch(
       if (
         config.automerge &&
         !config.automergeAfterPreviousMerge &&
-        (await isUpdatePresentOnBaseBranch(config))
+        (await mergedUpdateStillPresent(config, existingPr))
       ) {
         logger.debug('Disabling automerge because PR was merged previously');
         config.automerge = false;

@@ -253,6 +253,9 @@ So for example you could choose to automerge all (passing) `devDependencies` onl
   Branches creation follows [`schedule`](#schedule) and the automerge follows [`automergeSchedule`](#automergeschedule).
 
 !!! note
+  When Renovate finds a previously merged matching PR, it disables automerge only while that PR's changes are still present on the base branch. If those changes were reverted, Renovate raises the update again with automerge enabled.
+
+!!! note
   On Azure there can be a delay between a PR being set as completed by Renovate, and Azure merging the PR / finishing its tasks.
   Renovate tries to delay until Azure is in the expected state, but it will continue if it takes too long.
   In some cases this can result in a dependency not being merged, and a fresh PR being created for the dependency.
@@ -274,7 +277,7 @@ If you don't select any status check, and you use platform automerge, then GitHu
 ## `automergeAfterPreviousMerge`
 
 By default, Renovate disables automerge when it finds a matching PR that was merged previously, but only as long as that update is still present on your base branch.
-Renovate marks the new PR as `Disabled because a matching PR was automerged previously.` when it finds such an update on your base branch, and decides that from the state of the old PR alone.
+Renovate marks the new PR as `Disabled because a matching PR was automerged previously.` when it finds such an update on your base branch.
 If the merged update was later reverted on your base branch, Renovate still needs to re-raise it, so it leaves automerge enabled.
 
 Set this option to `true` to skip that check entirely, so automerge stays enabled even when the merged update is still present on your base branch:
