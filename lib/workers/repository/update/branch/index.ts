@@ -53,7 +53,10 @@ import { ensurePr, getPlatformPrOptions } from '../pr/index.ts';
 import { setArtifactErrorStatus } from './artifacts.ts';
 import { tryBranchAutomerge } from './automerge.ts';
 import { bumpVersions } from './bump-versions.ts';
-import { prAlreadyExisted } from './check-existing.ts';
+import {
+  mergedUpdateStillPresent,
+  prAlreadyExisted,
+} from './check-existing.ts';
 import { commitFilesToBranch } from './commit.ts';
 import executePostUpgradeCommands from './execute-post-upgrade-commands.ts';
 import { getUpdatedPackageFiles } from './get-updated.ts';
@@ -199,7 +202,10 @@ export async function processBranch(
         : undefined;
     if (existingPr?.state === 'merged') {
       logger.debug(`Matching PR #${existingPr.number} was merged previously`);
-      if (config.automerge) {
+      if (
+        config.automerge &&
+        (await mergedUpdateStillPresent(config, existingPr))
+      ) {
         logger.debug('Disabling automerge because PR was merged previously');
         config.automerge = false;
         config.automergedPreviously = true;
