@@ -400,6 +400,26 @@ describe('workers/repository/update/branch/index', () => {
       );
     });
 
+    it('keeps automerge when automergeAfterPreviousMerge is enabled even if merged PR update is still present', async () => {
+      schedule.isScheduledNow.mockReturnValueOnce(false);
+      scm.branchExists.mockResolvedValue(true);
+      config.automerge = true;
+      config.automergeAfterPreviousMerge = true;
+      config.updateType = 'digest';
+      checkExisting.prAlreadyExisted.mockResolvedValueOnce(
+        partial<Pr>({
+          number: 13,
+          state: 'merged',
+        }),
+      );
+      checkExisting.mergedUpdateStillPresent.mockResolvedValueOnce(true);
+      await branchWorker.processBranch(config);
+      expect(config.automerge).toBe(true);
+      expect(logger.debug).not.toHaveBeenCalledWith(
+        'Disabling automerge because PR was merged previously',
+      );
+    });
+
     it('allows automerge if a merged PR update is no longer present', async () => {
       schedule.isScheduledNow.mockReturnValueOnce(false);
       scm.branchExists.mockResolvedValue(true);

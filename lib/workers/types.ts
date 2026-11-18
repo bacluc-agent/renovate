@@ -163,6 +163,7 @@ export interface BranchConfig
   extends BranchUpgradeConfig, LegacyAdminConfig, PlatformPrOptions {
   automergeComment?: string;
   automergedPreviously?: boolean;
+  automergeAfterPreviousMerge?: boolean;
   baseBranch: string;
   branchAutomergeFailureMessage?: string;
 

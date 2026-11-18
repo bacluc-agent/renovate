@@ -204,6 +204,7 @@ export async function processBranch(
       logger.debug(`Matching PR #${existingPr.number} was merged previously`);
       if (
         config.automerge &&
+        !config.automergeAfterPreviousMerge &&
         (await mergedUpdateStillPresent(config, existingPr))
       ) {
         logger.debug('Disabling automerge because PR was merged previously');
