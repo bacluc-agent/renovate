@@ -17,17 +17,23 @@ export async function mergedUpdateStillPresent(
   try {
     const prCommit = pr.sha ?? getBranchCommit(pr.sourceBranch);
     if (!prCommit) {
-      logger.debug(`Unable to check whether merged PR #${pr.number} is still present in ${config.baseBranch} - assuming it is`);
+      logger.debug(
+        `Unable to check whether merged PR #${pr.number} is still present in ${config.baseBranch} - assuming it is`,
+      );
       return true;
     }
     const files = await getBranchFilesFromCommit(prCommit);
     if (!files?.length) {
-      logger.debug(`Unable to check whether merged PR #${pr.number} is still present in ${config.baseBranch} - assuming it is`);
+      logger.debug(
+        `Unable to check whether merged PR #${pr.number} is still present in ${config.baseBranch} - assuming it is`,
+      );
       return true;
     }
     const baseCommit = getBranchCommit(config.baseBranch);
     if (!baseCommit) {
-      logger.debug(`Unable to check whether merged PR #${pr.number} is still present in ${config.baseBranch} - assuming it is`);
+      logger.debug(
+        `Unable to check whether merged PR #${pr.number} is still present in ${config.baseBranch} - assuming it is`,
+      );
       return true;
     }
     // ponytail: only the head's last-commit file list is inspected (Renovate force-pushes one commit per branch), and a squash/rebase merge whose head branch was deleted makes pr.sha unresolvable so the helper fails closed; upgrade path is adding mergeCommitSha to Pr and diffing from the merge commit.
@@ -36,7 +42,9 @@ export async function mergedUpdateStillPresent(
       drift.some((change) => change.path === file),
     );
     if (!stillPresent) {
-      logger.debug(`Matching PR #${pr.number} was merged previously, but its changes are no longer in ${config.baseBranch} - treating it as a new update`);
+      logger.debug(
+        `Matching PR #${pr.number} was merged previously, but its changes are no longer in ${config.baseBranch} - treating it as a new update`,
+      );
     }
     return stillPresent;
   } catch (err) {
