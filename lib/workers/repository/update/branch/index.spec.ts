@@ -381,18 +381,38 @@ describe('workers/repository/update/branch/index', () => {
     });
 
     it('allows branch but disables automerge if merged PR found', async () => {
+      const pr = partial<Pr>({ number: 13, state: 'merged' });
+      schedule.isScheduledNow.mockReturnValueOnce(false);
+      scm.branchExists.mockResolvedValue(true);
+      config.automerge = true;
+      config.updateType = 'digest';
+      checkExisting.prAlreadyExisted.mockResolvedValueOnce(pr);
+      checkExisting.mergedUpdateStillPresent.mockResolvedValueOnce(true);
+      await branchWorker.processBranch(config);
+      expect(reuse.shouldReuseExistingBranch).toHaveBeenCalledTimes(0);
+      expect(checkExisting.mergedUpdateStillPresent).toHaveBeenCalledWith(
+        expect.anything(),
+        pr,
+      );
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Disabling automerge because PR was merged previously',
+      );
+    });
+
+    it('allows automerge if a merged PR update is no longer present', async () => {
       schedule.isScheduledNow.mockReturnValueOnce(false);
       scm.branchExists.mockResolvedValue(true);
       config.automerge = true;
       config.updateType = 'digest';
       checkExisting.prAlreadyExisted.mockResolvedValueOnce(
-        partial<Pr>({
-          number: 13,
-          state: 'merged',
-        }),
+        partial<Pr>({ number: 13, state: 'merged' }),
       );
+      checkExisting.mergedUpdateStillPresent.mockResolvedValueOnce(false);
       await branchWorker.processBranch(config);
-      expect(reuse.shouldReuseExistingBranch).toHaveBeenCalledTimes(0);
+      expect(config.automerge).toBe(true);
+      expect(logger.debug).not.toHaveBeenCalledWith(
+        'Disabling automerge because PR was merged previously',
+      );
     });
 
     it('skips branch if closed minor PR found', async () => {
